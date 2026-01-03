@@ -1,7 +1,9 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { sendToken, createToken } from "../utils/sendToken.js";
 import { loginService, registerUserService } from "../services/auth.service.js";
+import { ENV } from "../constants/index.js";
 
 export const register = async (req, res) => {
   try {
@@ -27,7 +29,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
+      maxAge:  60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -47,10 +49,34 @@ export const login = async (req, res) => {
 
 export const refreshAccessToken = (req, res) => {
   try {
-    const incomingToken = req.cookies.accessToken;
-    if(incomingToken){
-      
+    const incomingToken = req.cookies.refreshToken;
+    console.log("incomingToken", incomingToken);
+    if (!incomingToken) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
     }
+    const decodedToken = jwt.verify(incomingToken, ENV.REFRESH_TOKEN);
+    console.log("decodedToken", decodedToken);
+    const accessToken = jwt.sign({ id: decodedToken.id }, ENV.ACCESS_TOKEN);
+    console.log(accessToken);
+    const refreshToken = jwt.sign({ id: decodedToken.id }, ENV.REFRESH_TOKEN);
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .json({ message: "Access token refreshed" });
   } catch (error) {
     res.status(400).json({
       message: error.message,

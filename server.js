@@ -1,10 +1,10 @@
 import http from "http";
-import mongoose from "mongoose";
 import { Server } from "socket.io";
 import app from "./app.js";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import { socketHandler } from "./socket/socket.js";
+import { ENV } from "./constants/index.js";
 
 dotenv.config();
 connectDB();
@@ -15,7 +15,6 @@ const io = new Server(server, {
 });
 socketHandler(io);
 
-server.listen(process.env.PORT, () => {
-  console.log(`Server is running on ${process.env.PORT}`);
+server.listen(ENV.PORT, () => {
+  console.log(`Server is running on ${ENV.PORT}`);
 });
-
