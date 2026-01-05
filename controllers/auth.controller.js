@@ -1,7 +1,4 @@
-import User from "../models/User.js";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { sendToken, createToken } from "../utils/sendToken.js";
 import { loginService, registerUserService } from "../services/auth.service.js";
 import { ENV } from "../constants/index.js";
 
