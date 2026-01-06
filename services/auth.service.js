@@ -12,9 +12,14 @@ export const registerUserService = async (body) => {
   const user = await User.create(body);
   console.log(user);
 
-  const token = jwt.sign({ id: user._id }, ENV.JWT_SECRET);
+  const accessToken = jwt.sign({ userId: user._id }, ENV.ACCESS_TOKEN, {
+    expiresIn: "15m",
+  });
+  const refreshToken = jwt.sign({ userId: user._id }, ENV.REFRESH_TOKEN, {
+    expiresIn: "7d",
+  });
 
-  return { user, token };
+  return { user, accessToken, refreshToken };
 };
 
 export const loginService = async (body) => {

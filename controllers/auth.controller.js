@@ -4,12 +4,24 @@ import { ENV } from "../constants/index.js";
 
 export const register = async (req, res) => {
   try {
-    const { user, token } = await registerUserService(req.body);
-    res.cookie("token", token);
+    const { user, accessToken, refreshToken } = await registerUserService(req.body);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     res.status(201).json({
       message: "User is created successfully.",
       id: user._id,
       name: user.name,
+      user
     });
   } catch (error) {
     console.log(error);
@@ -26,7 +38,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge:  60 * 1000,
+      maxAge: 15 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -36,6 +48,7 @@ export const login = async (req, res) => {
     });
     res.status(200).json({
       message: "User Logged in Successfully",
+      user
     });
   } catch (error) {
     res.status(400).json({
@@ -99,4 +112,15 @@ export const logout = (req, res) => {
   return res.status(200).json({
     message: "Logged out successfully",
   });
+};
+
+export const getMe = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.status(200).json({ user: req.user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

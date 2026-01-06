@@ -1,11 +1,10 @@
 import Message from "../models/Message.js";
-const onlineUsers = new Map();
+const onlineUsers = {};
 
 export const socketHandler = async (io) => {
   io.on("connection", (socket) => {
-    
     socket.on("join", (userId) => {
-      onlineUsers.set(userId, socket.id);
+      onlineUsers[userId] = socket.id;
       socket.userId = userId;
     });
 
@@ -15,18 +14,18 @@ export const socketHandler = async (io) => {
         receiver: receiverId,
         text,
       });
-      
-      const receiverSocket = onlineUsers.get(receiverId);
+
+      const receiverSocket = onlineUsers[receiverId];
       if (receiverSocket) {
         io.to(receiverSocket).emit("receive-message", message);
       }
-      
+
       socket.emit("message-sent", message);
     });
-    
+
     socket.on("disconnect", () => {
       if (socket.userId) {
-        onlineUsers.delete(socket.userId);
+        delete onlineUsers[socket.userId];
       }
     });
   });
